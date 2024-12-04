@@ -4,7 +4,7 @@ import { useState } from "react";
 import CoverPage from "./coverpage/page";
 import Section from "./section/page";
 import SectionQuiz from "./section-quiz/page";
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuidv4 } from "uuid";
 
 export default function CreateQuiz() {
   const questionTypes = [
@@ -46,7 +46,13 @@ export default function CreateQuiz() {
             {
               id: section.questions.length + 1,
               type,
-              options: type !== "text_input" && type !== "date" && type !== "rating" ? [""] : [],
+              options:
+                type !== "text_input" &&
+                type !== "date" &&
+                type !== "rating"
+                  ? [""]
+                  : [],
+              correctAnswers: type === "text_input" ? [""] : [], // Add this line
               maxSelect: 1,
               isRequired: false,
               ratingLevel: type === "rating" ? 5 : null,
@@ -59,6 +65,7 @@ export default function CreateQuiz() {
     });
     setSections(updatedSections);
   };
+  
 
   const updateOption = (sectionId, questionId, optionIndex, value) => {
     const updatedSections = sections.map((section) => {
@@ -152,6 +159,126 @@ export default function CreateQuiz() {
     setSections(updatedSections);
   };
 
+  const toggleCorrectOption = (sectionId, questionId, optionIdx) => {
+    setSections((prevSections) =>
+      prevSections.map((section) =>
+        section.id === sectionId
+          ? {
+              ...section,
+              questions: section.questions.map((question) =>
+                question.id === questionId
+                  ? {
+                      ...question,
+                      correctOptions: question.correctOptions?.includes(
+                        optionIdx
+                      )
+                        ? question.correctOptions.filter(
+                            (idx) => idx !== optionIdx
+                          )
+                        : [...(question.correctOptions || []), optionIdx],
+                    }
+                  : question
+              ),
+            }
+          : section
+      )
+    );
+  };
+
+  const setCorrectOption = (sectionId, questionId, optionIdx) => {
+    setSections((prevSections) =>
+      prevSections.map((section) =>
+        section.id === sectionId
+          ? {
+              ...section,
+              questions: section.questions.map((question) =>
+                question.id === questionId
+                  ? { ...question, correctOption: optionIdx } // Update the correct option for single-answer
+                  : question
+              ),
+            }
+          : section
+      )
+    );
+  };
+
+  const addCorrectAnswer = (sectionId, questionId) => {
+    setSections((prevSections) =>
+      prevSections.map((section) =>
+        section.id === sectionId
+          ? {
+              ...section,
+              questions: section.questions.map((question) =>
+                question.id === questionId
+                  ? {
+                      ...question,
+                      correctAnswers: [...(question.correctAnswers || []), ""],
+                    }
+                  : question
+              ),
+            }
+          : section
+      )
+    );
+  };
+  const removeCorrectAnswer = (sectionId, questionId) => {
+    setSections((prevSections) =>
+      prevSections.map((section) =>
+        section.id === sectionId
+          ? {
+              ...section,
+              questions: section.questions.map((question) =>
+                question.id === questionId
+                  ? {
+                      ...question,
+                      correctAnswers: question.correctAnswers.slice(0, -1),
+                    }
+                  : question
+              ),
+            }
+          : section
+      )
+    );
+  };
+  const updateCorrectAnswer = (sectionId, questionId, idx, value) => {
+    setSections((prevSections) =>
+      prevSections.map((section) =>
+        section.id === sectionId
+          ? {
+              ...section,
+              questions: section.questions.map((question) =>
+                question.id === questionId
+                  ? {
+                      ...question,
+                      correctAnswers: question.correctAnswers.map(
+                        (answer, index) => (index === idx ? value : answer)
+                      ),
+                    }
+                  : question
+              ),
+            }
+          : section
+      )
+    );
+  };
+  
+  const updatePoints = (sectionId, questionId, value) => {
+    setSections((prevSections) =>
+      prevSections.map((section) =>
+        section.id === sectionId
+          ? {
+              ...section,
+              questions: section.questions.map((question) =>
+                question.id === questionId
+                  ? { ...question, points: parseInt(value) || 0 }
+                  : question
+              ),
+            }
+          : section
+      )
+    );
+  };
+
   const toggleRequired = (sectionId, questionId) => {
     const updatedSections = sections.map((section) => {
       if (section.id === sectionId) {
@@ -206,6 +333,7 @@ export default function CreateQuiz() {
     });
     setSections(updatedSections);
   };
+
   const createQuiz = () => {
     const quizId = uuidv4();
     const payload = {
@@ -247,29 +375,60 @@ export default function CreateQuiz() {
         })),
       })),
     };
-  
-    fetch('http://localhost:3001/quiz', {
-      method: 'POST',
+
+    fetch("http://localhost:3001/quiz", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify(payload),
     })
       .then((response) => response.json())
       .then((data) => {
-        console.log('Quiz created:', data);
+        console.log("Quiz created:", data);
       })
       .catch((error) => {
-        console.error('Error creating quiz:', error);
+        console.error("Error creating quiz:", error);
       });
   };
 
+  const handleUploadImage = (e, sectionId, questionId, optionIdx) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        setSections((prevSections) =>
+          prevSections.map((section) =>
+            section.id === sectionId
+              ? {
+                  ...section,
+                  questions: section.questions.map((question) =>
+                    question.id === questionId
+                      ? {
+                          ...question,
+                          options: question.options.map((option, idx) =>
+                            idx === optionIdx
+                              ? { ...option, image: reader.result }
+                              : option
+                          ),
+                        }
+                      : question
+                  ),
+                }
+              : section
+          )
+        );
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+  
   return (
     <div className="min-h-screen bg-gray-100 py-8">
       <CoverPage />
       {sections.map((section) => (
         // <Section
-        <SectionQuiz 
+        <SectionQuiz
           key={section.id}
           section={section}
           questionTypes={questionTypes}
@@ -284,15 +443,22 @@ export default function CreateQuiz() {
           deleteSection={deleteSection}
           toggleQuestionTypesVisibility={toggleQuestionTypesVisibility}
           addSection={addSection}
+          toggleCorrectOption={toggleCorrectOption}
+          setCorrectOption={setCorrectOption}
+          addCorrectAnswer={addCorrectAnswer} // Pass addCorrectAnswer
+          removeCorrectAnswer={removeCorrectAnswer} // Pass removeCorrectAnswer
+          updateCorrectAnswer={updateCorrectAnswer} // Pass updateCorrectAnswer
+          updatePoints={updatePoints} // Pass updatePoints
+          handleUploadImage={handleUploadImage} // Pass handle
         />
       ))}
-       <div className="max-w-2xl mx-auto mt-8">
-       <button
-  className="w-full mt-2 px-4 py-2 bg-[#03A9F4] text-white rounded-full"
-  onClick={createQuiz} // เพิ่มฟังก์ชันที่ต้องการให้ทำงานเมื่อกดปุ่ม
->
-  สร้างแบบทดสอบ
-</button>
+      <div className="max-w-2xl mx-auto mt-8">
+        <button
+          className="w-full mt-2 px-4 py-2 bg-[#03A9F4] text-white rounded-full"
+          onClick={createQuiz} // เพิ่มฟังก์ชันที่ต้องการให้ทำงานเมื่อกดปุ่ม
+        >
+          สร้างแบบทดสอบ
+        </button>
       </div>
     </div>
   );

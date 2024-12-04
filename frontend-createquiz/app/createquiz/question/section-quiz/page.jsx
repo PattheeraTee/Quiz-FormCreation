@@ -1,7 +1,18 @@
 // components/Section.js
 import React from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faImage, faCalendarAlt, faStar, faGripVertical, faCircleXmark,faCircleCheck } from "@fortawesome/free-solid-svg-icons";
+import {
+  faImage,
+  faCalendarAlt,
+  faStar,
+  faCheck,
+  faGripVertical,
+  faCircleXmark,
+  faCircleCheck,
+  faSquareXmark,
+  faSquareCheck,
+  faTrash,
+} from "@fortawesome/free-solid-svg-icons";
 
 const Section = ({
   section,
@@ -17,10 +28,19 @@ const Section = ({
   deleteSection,
   toggleQuestionTypesVisibility,
   addSection,
+  toggleCorrectOption,
+  setCorrectOption,
+  addCorrectAnswer,
+  removeCorrectAnswer,
+  updateCorrectAnswer,
+  updatePoints,
+  handleUploadImage,
 }) => {
   return (
     <div className="max-w-2xl mx-auto mt-8 bg-white p-6 rounded-xl shadow relative">
-      <h3 className="text-xl font-semibold mb-2 text-black">ส่วนที่ {section.id}</h3>
+      <h3 className="text-xl font-semibold mb-2 text-black">
+        ส่วนที่ {section.id}
+      </h3>
       <input
         type="text"
         placeholder={`ชื่อส่วนที่ ${section.id}`}
@@ -79,211 +99,435 @@ const Section = ({
 
           {/* If text_input, show a simple text area */}
           {question.type === "text_input" && (
-            <div className="mb-4">
-              <textarea
-                placeholder="กรอกคำตอบของคุณ"
-                className="w-full px-4 py-2 border border-gray-300 rounded text-black"
-              />
-              <div className="flex justify-between items-center mt-4">
+            <div>
+              {/* Correct Answers Section */}
+              <div className="mb-4">
+                <label className="block text-black font-semibold mb-1">
+                  กรอกคำตอบที่ถูกต้อง:
+                </label>
+                {question.correctAnswers?.map((answer, idx) => (
+                  <div key={idx} className="flex items-center mb-4">
+                    <div className="relative w-full">
+                      {/* Input Field for Correct Answer */}
+                      <input
+                        type="text"
+                        value={answer}
+                        onChange={(e) =>
+                          updateCorrectAnswer(
+                            section.id,
+                            question.id,
+                            idx,
+                            e.target.value
+                          )
+                        }
+                        placeholder={`คำตอบที่ ${idx + 1}`}
+                        className="w-full px-4 py-2 border border-gray-300 rounded text-black pr-10" // Add `pr-10` for spacing
+                      />
+
+                      {/* Mark Answer as Correct */}
+                      <FontAwesomeIcon
+                        icon={faCheck}
+                        className="absolute right-4 top-1/2 transform -translate-y-1/2 text-green-500"
+                      />
+                    </div>
+
+                    {/* Delete Correct Answer */}
+                    <button
+                      onClick={() =>
+                        removeCorrectAnswer(section.id, question.id, idx)
+                      }
+                      className="ml-4 text-red-500"
+                    >
+                      ✖️
+                    </button>
+                  </div>
+                ))}
+
+                {/* Add New Correct Answer */}
                 <button
-                  onClick={() => deleteQuestion(section.id, question.id)}
-                  className="text-red-500"
+                  onClick={() => addCorrectAnswer(section.id, question.id)}
+                  className="text-[#03A9F4] underline"
                 >
-                  ลบคำถาม
+                  + เพิ่มคำตอบที่ถูกต้อง
                 </button>
+              </div>
+
+              {/* Points Input, Trash Bin, and Required Toggle */}
+              <div className="flex justify-between items-center mt-4">
+                {/* Points Input */}
                 <div className="flex items-center">
-                  <span className="text-black mr-2">จำเป็น</span>
+                  <span className="mr-2 text-black">คะแนน:</span>
                   <input
-                    type="checkbox"
-                    checked={question.isRequired}
-                    onChange={() => toggleRequired(section.id, question.id)}
-                    className="toggle-checkbox"
+                    type="number"
+                    value={question.points || 0}
+                    onChange={(e) =>
+                      updatePoints(
+                        section.id,
+                        question.id,
+                        parseInt(e.target.value)
+                      )
+                    }
+                    className="w-16 px-2 py-1 border border-gray-300 rounded text-black"
                   />
+                </div>
+
+                {/* Trash Bin and Required Toggle */}
+                <div className="flex items-center space-x-4">
+                  {/* Trash Bin */}
+                  <button
+                    onClick={() => deleteQuestion(section.id, question.id)}
+                    className="text-gray-500"
+                  >
+                    <FontAwesomeIcon icon={faTrash} className="w-5 h-5" />
+                  </button>
+
+                  {/* Required Toggle */}
+                  <div className="flex items-center">
+                    <span className="text-black mr-2">จำเป็น</span>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={question.isRequired}
+                        onChange={() => toggleRequired(section.id, question.id)}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-gray-300 rounded-full peer dark:bg-gray-300 peer-checked:after:translate-x-5 peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[#03A9F4]"></div>
+                    </label>
+                  </div>
                 </div>
               </div>
             </div>
           )}
 
-          {/* If multiple choice, show options */}
-         {/* Multiple Choice Option Styling */}
-{question.type === "multiple_choice" && (
-  <div>
-    {question.options.map((option, idx) => (
-      <div key={idx} className="flex items-center mb-2">
-        {/* Drag Handle */}
-        <FontAwesomeIcon icon={faGripVertical} className="mr-2 text-gray-400" />
+          {question.type === "multiple_choice" && (
+            <div>
+              {question.options.map((option, idx) => (
+                <div key={idx} className="flex flex-col mb-4">
+                  <div className="flex items-center mb-2">
+                    {/* Drag Handle */}
+                    <FontAwesomeIcon
+                      icon={faGripVertical}
+                      className="mr-2 text-gray-400"
+                    />
 
-        {/* Correct/Incorrect Option Indicator */}
-        <button className="mr-2">
-          <FontAwesomeIcon
-            icon={question.correctOption === idx ? faCircleCheck : faCircleXmark}
-            className={`w-5 h-5 ${
-              question.correctOption === idx ? "text-green-500" : "text-gray-400"
-            }`}
-            onClick={() => setCorrectOption(section.id, question.id, idx)}
-          />
-        </button>
+                    {/* Correct/Incorrect Option Indicator */}
+                    <button
+                      className="mr-2"
+                      onClick={() =>
+                        setCorrectOption(section.id, question.id, idx)
+                      }
+                    >
+                      <FontAwesomeIcon
+                        icon={
+                          question.correctOption === idx
+                            ? faCircleCheck
+                            : faCircleXmark
+                        }
+                        className={`w-5 h-5 ${
+                          question.correctOption === idx
+                            ? "text-green-500"
+                            : "text-gray-400"
+                        }`}
+                      />
+                    </button>
 
-        {/* Option Input */}
-        <input
-          type="text"
-          value={option}
-          onChange={(e) =>
-            updateOption(section.id, question.id, idx, e.target.value)
-          }
-          placeholder={`ตัวเลือก ${idx + 1}`}
-          className="w-full px-4 py-2 border border-gray-300 rounded text-black"
-        />
+                    {/* Option Input */}
+                    <input
+                      type="text"
+                      value={option.text || ""}
+                      onChange={(e) =>
+                        updateOption(
+                          section.id,
+                          question.id,
+                          idx,
+                          e.target.value
+                        )
+                      }
+                      placeholder={`ตัวเลือก ${idx + 1}`}
+                      className="w-full px-4 py-2 border border-gray-300 rounded text-black"
+                    />
 
-        {/* Image Icon */}
-        <button className="ml-2 text-gray-500">
-          <FontAwesomeIcon icon={faImage} className="w-6 h-6 text-gray-500" />
-        </button>
+                    {/* Upload Image Button */}
+                    <button
+                      className="ml-2 text-gray-500"
+                      onClick={() =>
+                        document.getElementById(`file-upload-${idx}`).click()
+                      }
+                    >
+                      <FontAwesomeIcon icon={faImage} className="w-6 h-6" />
+                    </button>
 
-        {/* Delete Option Button */}
-        <button
-          onClick={() => removeOption(section.id, question.id, idx)}
-          className="ml-2 text-red-500"
-        >
-          ✖️
-        </button>
-      </div>
-    ))}
+                    {/* Hidden File Input */}
+                    <input
+                      type="file"
+                      id={`file-upload-${idx}`}
+                      className="hidden"
+                      accept="image/*"
+                      onChange={(e) =>
+                        handleUploadImage(e, section.id, question.id, idx)
+                      }
+                    />
 
-    {/* Add New Option Button */}
-    <button
-      onClick={() => addOption(section.id, question.id)}
-      className="text-[#03A9F4] underline mb-2"
-    >
-      + เพิ่มตัวเลือกใหม่
-    </button>
+                    {/* Delete Option Button */}
+                    <button
+                      onClick={() => removeOption(section.id, question.id, idx)}
+                      className="ml-2 text-red-500"
+                    >
+                      ✖️
+                    </button>
+                  </div>
 
-    {/* Required Toggle */}
-    <div className="flex justify-between items-center mt-4">
-      <button
-        onClick={() => deleteQuestion(section.id, question.id)}
-        className="text-red-500"
-      >
-        ลบคำถาม
-      </button>
-      <div className="flex items-center">
-        <span className="text-black mr-2">จำเป็น</span>
-        <input
-          type="checkbox"
-          checked={question.isRequired}
-          onChange={() => toggleRequired(section.id, question.id)}
-          className="toggle-checkbox"
-        />
-      </div>
-    </div>
-  </div>
-)}
+                  {/* Show Uploaded Image */}
+                  {option.image && (
+                    <div className="mt-2 ms-12 flex justify-start">
+                      <img
+                        src={option.image}
+                        alt={`ตัวเลือก ${idx + 1}`}
+                        className="w-4/5 max-h-80 object-contain border border-gray-300 rounded"
+                      />
+                    </div>
+                  )}
+                </div>
+              ))}
 
+              {/* Add New Option Button */}
+              <button
+                onClick={() => addOption(section.id, question.id)}
+                className="text-[#03A9F4] mb-2"
+              >
+                + เพิ่มตัวเลือกใหม่
+              </button>
 
-          {/* If dropdown, show options */}
+              {/* Points Input, Trash Bin, and Required Toggle */}
+              <div className="flex justify-between items-center mt-4">
+                {/* Points Input */}
+                <div className="flex items-center">
+                  <span className="mr-2 text-black">คะแนน:</span>
+                  <input
+                    type="number"
+                    value={question.points || 0}
+                    onChange={(e) =>
+                      updatePoints(
+                        section.id,
+                        question.id,
+                        parseInt(e.target.value)
+                      )
+                    }
+                    className="w-16 px-2 py-1 border border-gray-300 rounded text-black"
+                  />
+                </div>
+
+                {/* Trash Bin and Required Toggle */}
+                <div className="flex items-center space-x-4">
+                  {/* Trash Bin */}
+                  <button
+                    onClick={() => deleteQuestion(section.id, question.id)}
+                    className="text-gray-500"
+                  >
+                    <FontAwesomeIcon icon={faTrash} className="w-5 h-5" />
+                  </button>
+
+                  {/* Required Toggle */}
+                  <div className="flex items-center">
+                    <span className="text-black mr-2">จำเป็น</span>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={question.isRequired}
+                        onChange={() => toggleRequired(section.id, question.id)}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-gray-300 rounded-full peer dark:bg-gray-300 peer-checked:after:translate-x-5 peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[#03A9F4]"></div>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {question.type === "dropdown" && (
             <div>
+              {/* Dropdown Preview */}
               <select className="w-full px-4 py-2 mb-2 border border-gray-300 rounded text-black">
+                <option disabled value="">
+                  เมนูดรอปดาวน์
+                </option>
                 {question.options.map((option, idx) => (
                   <option key={idx} value={option}>
                     {option || `ตัวเลือก ${idx + 1}`}
                   </option>
                 ))}
               </select>
+
+              {/* Options List */}
               {question.options.map((option, idx) => (
                 <div key={idx} className="flex items-center mb-2">
-                  <FontAwesomeIcon icon={faGripVertical} className="mr-2 text-gray-400" />
+                  <FontAwesomeIcon
+                    icon={faGripVertical}
+                    className="mr-2 text-gray-400"
+                  />
+                  <button className="mr-2">
+                    <FontAwesomeIcon
+                      icon={
+                        question.correctOption === idx
+                          ? faCircleCheck
+                          : faCircleXmark
+                      }
+                      className={`w-5 h-5 ${
+                        question.correctOption === idx
+                          ? "text-green-500"
+                          : "text-gray-400"
+                      }`}
+                      onClick={() =>
+                        setCorrectOption(section.id, question.id, idx)
+                      }
+                    />
+                  </button>
                   <input
                     type="text"
                     value={option}
                     onChange={(e) =>
-                      updateOption(
-                        section.id,
-                        question.id,
-                        idx,
-                        e.target.value
-                      )
+                      updateOption(section.id, question.id, idx, e.target.value)
                     }
                     placeholder={`ตัวเลือก ${idx + 1}`}
                     className="w-full px-4 py-2 border border-gray-300 rounded text-black"
                   />
                   <button
-                    onClick={() =>
-                      removeOption(section.id, question.id, idx)
-                    }
+                    onClick={() => removeOption(section.id, question.id, idx)}
                     className="ml-2 text-red-500"
                   >
                     ✖️
                   </button>
                 </div>
               ))}
+
+              {/* Add New Option Button */}
               <button
                 onClick={() => addOption(section.id, question.id)}
                 className="text-[#03A9F4] underline mb-2"
               >
                 + เพิ่มตัวเลือกใหม่
               </button>
+
+              {/* Points Input, Trash Bin, and Required Toggle */}
               <div className="flex justify-between items-center mt-4">
-                <button
-                  onClick={() => deleteQuestion(section.id, question.id)}
-                  className="text-red-500"
-                >
-                  ลบคำถาม
-                </button>
+                {/* Points Input */}
                 <div className="flex items-center">
-                  <span className="text-black mr-2">จำเป็น</span>
+                  <span className="mr-2 text-black">คะแนน:</span>
                   <input
-                    type="checkbox"
-                    checked={question.isRequired}
-                    onChange={() => toggleRequired(section.id, question.id)}
-                    className="toggle-checkbox"
+                    type="number"
+                    value={question.points || 0}
+                    onChange={(e) =>
+                      updatePoints(
+                        section.id,
+                        question.id,
+                        parseInt(e.target.value)
+                      )
+                    }
+                    className="w-16 px-2 py-1 border border-gray-300 rounded text-black"
                   />
+                </div>
+
+                {/* Trash Bin and Required Toggle */}
+                <div className="flex items-center space-x-4">
+                  {/* Trash Bin */}
+                  <button
+                    onClick={() => deleteQuestion(section.id, question.id)}
+                    className="text-gray-500"
+                  >
+                    <FontAwesomeIcon icon={faTrash} className="w-5 h-5" />
+                  </button>
+
+                  {/* Required Toggle */}
+                  <div className="flex items-center">
+                    <span className="text-black mr-2">จำเป็น</span>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={question.isRequired}
+                        onChange={() => toggleRequired(section.id, question.id)}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-gray-300 rounded-full peer dark:bg-gray-300 peer-checked:after:translate-x-5 peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[#03A9F4]"></div>
+                    </label>
+                  </div>
                 </div>
               </div>
             </div>
           )}
 
-          {/* If checkbox, show options with maxSelect */}
           {question.type === "checkbox" && (
             <div>
-              {question.options.map((option, idx) => (
-                <div key={idx} className="flex items-center mb-2">
-                  <FontAwesomeIcon icon={faGripVertical} className="mr-2 text-gray-400" />
-                  <input type="checkbox" className="mr-2" disabled />
-                  <input
-                    type="text"
-                    value={option}
-                    onChange={(e) =>
-                      updateOption(
-                        section.id,
-                        question.id,
-                        idx,
-                        e.target.value
-                      )
-                    }
-                    placeholder={`ตัวเลือก ${idx + 1}`}
-                    className="w-full px-4 py-2 border border-gray-300 rounded text-black"
-                  />
-                  <button
-                    onClick={() =>
-                      removeOption(section.id, question.id, idx)
-                    }
-                    className="ml-2 text-red-500"
-                  >
-                    ✖️
-                  </button>
-                </div>
-              ))}
-              <button
-                onClick={() => addOption(section.id, question.id)}
-                className="text-[#03A9F4] underline mb-2"
-              >
-                + เพิ่มตัวเลือกใหม่
-              </button>
-              <div className="flex items-center mb-4">
+              {/* Options List */}
+              <div>
+                {question.options.map((option, idx) => (
+                  <div key={idx} className="flex items-center mb-2">
+                    {/* Correct Answer Toggle */}
+                    <button
+                      className="mr-2"
+                      onClick={() =>
+                        toggleCorrectOption(section.id, question.id, idx)
+                      }
+                    >
+                      <FontAwesomeIcon
+                        icon={
+                          question.correctOptions?.includes(idx)
+                            ? faSquareCheck
+                            : faSquareXmark
+                        }
+                        className={`w-5 h-5 ${
+                          question.correctOptions?.includes(idx)
+                            ? "text-green-500"
+                            : "text-gray-400"
+                        }`}
+                      />
+                    </button>
+
+                    {/* Option Input */}
+                    <input
+                      type="text"
+                      value={option}
+                      onChange={(e) =>
+                        updateOption(
+                          section.id,
+                          question.id,
+                          idx,
+                          e.target.value
+                        )
+                      }
+                      placeholder={`ตัวเลือก ${idx + 1}`}
+                      className="w-full px-4 py-2 border border-gray-300 rounded text-black"
+                    />
+
+                    {/* Add Image Button */}
+                    <button className="ml-2 text-gray-500">
+                      <FontAwesomeIcon icon={faImage} className="w-6 h-6" />
+                    </button>
+
+                    {/* Delete Option Button */}
+                    <button
+                      onClick={() => removeOption(section.id, question.id, idx)}
+                      className="ml-2 text-red-500"
+                    >
+                      ✖️
+                    </button>
+                  </div>
+                ))}
+
+                {/* Add New Option */}
+                <button
+                  onClick={() => addOption(section.id, question.id)}
+                  className="text-[#03A9F4] underline"
+                >
+                  + เพิ่มตัวเลือกใหม่
+                </button>
+              </div>
+
+              {/* Max Select Dropdown */}
+              <div className="flex items-center mt-4">
                 <span className="mr-2 text-black">เลือกสูงสุด:</span>
                 <select
-                  value={question.maxSelect}
+                  value={question.maxSelect || 1}
                   onChange={(e) =>
                     updateMaxSelect(
                       section.id,
@@ -291,7 +535,7 @@ const Section = ({
                       parseInt(e.target.value)
                     )
                   }
-                  className="border border-gray-300 text-black rounded px-2 py-1"
+                  className="border border-gray-300 rounded px-2 py-1 text-black"
                 >
                   {question.options.map((_, idx) => (
                     <option key={idx} value={idx + 1}>
@@ -300,21 +544,49 @@ const Section = ({
                   ))}
                 </select>
               </div>
+
+              {/* Points Input, Trash Bin, and Required Toggle */}
               <div className="flex justify-between items-center mt-4">
-                <button
-                  onClick={() => deleteQuestion(section.id, question.id)}
-                  className="text-red-500"
-                >
-                  ลบคำถาม
-                </button>
+                {/* Points Input */}
                 <div className="flex items-center">
-                  <span className="text-black mr-2">จำเป็น</span>
+                  <span className="mr-2 text-black">คะแนน:</span>
                   <input
-                    type="checkbox"
-                    checked={question.isRequired}
-                    onChange={() => toggleRequired(section.id, question.id)}
-                    className="toggle-checkbox"
+                    type="number"
+                    value={question.points || 0}
+                    onChange={(e) =>
+                      updatePoints(
+                        section.id,
+                        question.id,
+                        parseInt(e.target.value)
+                      )
+                    }
+                    className="w-16 px-2 py-1 border border-gray-300 rounded text-black"
                   />
+                </div>
+
+                {/* Trash Bin and Required Toggle */}
+                <div className="flex items-center space-x-4">
+                  {/* Trash Bin */}
+                  <button
+                    onClick={() => deleteQuestion(section.id, question.id)}
+                    className="text-gray-500"
+                  >
+                    <FontAwesomeIcon icon={faTrash} className="w-5 h-5" />
+                  </button>
+
+                  {/* Required Toggle */}
+                  <div className="flex items-center">
+                    <span className="text-black mr-2">จำเป็น</span>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={question.isRequired}
+                        onChange={() => toggleRequired(section.id, question.id)}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-gray-300 rounded-full peer dark:bg-gray-300 peer-checked:after:translate-x-5 peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[#03A9F4]"></div>
+                    </label>
+                  </div>
                 </div>
               </div>
             </div>
@@ -336,21 +608,30 @@ const Section = ({
                   />
                 </button>
               </div>
-              <div className="flex justify-between items-center mt-4">
-                <button
-                  onClick={() => deleteQuestion(section.id, question.id)}
-                  className="text-red-500"
-                >
-                  ลบคำถาม
-                </button>
-                <div className="flex items-center">
-                  <span className="text-black mr-2">จำเป็น</span>
-                  <input
-                    type="checkbox"
-                    checked={question.isRequired}
-                    onChange={() => toggleRequired(section.id, question.id)}
-                    className="toggle-checkbox"
-                  />
+              <div className="flex justify-end items-center mt-4">
+                {/* Trash Bin and Required Toggle */}
+                <div className="flex items-center space-x-4">
+                  {/* Trash Bin */}
+                  <button
+                    onClick={() => deleteQuestion(section.id, question.id)}
+                    className="text-gray-500"
+                  >
+                    <FontAwesomeIcon icon={faTrash} className="w-5 h-5" />
+                  </button>
+
+                  {/* Required Toggle */}
+                  <div className="flex items-center">
+                    <span className="text-black mr-2">จำเป็น</span>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={question.isRequired}
+                        onChange={() => toggleRequired(section.id, question.id)}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-gray-300 rounded-full peer dark:bg-gray-300 peer-checked:after:translate-x-5 peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[#03A9F4]"></div>
+                    </label>
+                  </div>
                 </div>
               </div>
             </div>
@@ -364,7 +645,7 @@ const Section = ({
                   <FontAwesomeIcon
                     key={idx}
                     icon={faStar}
-                    className="w-6 h-6 text-gray-400 mr-1"
+                    className="w-6 h-6 text-gray-400 mr-4"
                   />
                 ))}
               </div>
@@ -388,21 +669,30 @@ const Section = ({
                   ))}
                 </select>
               </div>
-              <div className="flex justify-between items-center mt-4">
-                <button
-                  onClick={() => deleteQuestion(section.id, question.id)}
-                  className="text-red-500"
-                >
-                  ลบคำถาม
-                </button>
-                <div className="flex items-center">
-                  <span className="text-black mr-2">จำเป็น</span>
-                  <input
-                    type="checkbox"
-                    checked={question.isRequired}
-                    onChange={() => toggleRequired(section.id, question.id)}
-                    className="toggle-checkbox"
-                  />
+              <div className="flex justify-end items-center mt-4">
+                {/* Trash Bin and Required Toggle */}
+                <div className="flex items-center space-x-4">
+                  {/* Trash Bin */}
+                  <button
+                    onClick={() => deleteQuestion(section.id, question.id)}
+                    className="text-gray-500"
+                  >
+                    <FontAwesomeIcon icon={faTrash} className="w-5 h-5" />
+                  </button>
+
+                  {/* Required Toggle */}
+                  <div className="flex items-center">
+                    <span className="text-black mr-2">จำเป็น</span>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={question.isRequired}
+                        onChange={() => toggleRequired(section.id, question.id)}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-gray-300 rounded-full peer dark:bg-gray-300 peer-checked:after:translate-x-5 peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[#03A9F4]"></div>
+                    </label>
+                  </div>
                 </div>
               </div>
             </div>
@@ -416,7 +706,9 @@ const Section = ({
             onClick={() => toggleQuestionTypesVisibility(section.id)}
             className="text-[#03A9F4] font-bold mb-2"
           >
-            {section.showQuestionTypes ? "+ เพิ่มคำถามใหม่" : "+ เพิ่มคำถามใหม่"}
+            {section.showQuestionTypes
+              ? "+ เพิ่มคำถามใหม่"
+              : "+ เพิ่มคำถามใหม่"}
           </button>
           {section.showQuestionTypes && (
             <div className="grid grid-cols-3 gap-2">
