@@ -83,18 +83,48 @@ const Section = ({
           key={question.id}
           className="mt-4 p-4 border border-gray-300 rounded bg-white"
         >
-          <div className="flex items-center mb-2">
-            <input
-              type="text"
-              placeholder="คำถาม"
-              className="w-full px-4 py-2 border border-gray-300 rounded text-black"
-            />
-            <button className="ml-4 text-gray-500">
-              <FontAwesomeIcon
-                icon={faImage}
-                className="w-6 h-6 text-gray-500"
+          <div className="flex flex-col mb-4">
+            <div className="flex items-center mb-2">
+              {/* Question Input */}
+              <input
+                type="text"
+                placeholder="คำถาม"
+                className="w-full px-4 py-2 border border-gray-300 rounded text-black"
               />
-            </button>
+              {/* Upload Image Button */}
+              <button
+                className="ml-4 text-gray-500"
+                onClick={() =>
+                  document
+                    .getElementById(`question-file-upload-${question.id}`)
+                    .click()
+                }
+              >
+                <FontAwesomeIcon
+                  icon={faImage}
+                  className="w-6 h-6 text-gray-500"
+                />
+              </button>
+              {/* Hidden File Input */}
+              <input
+                type="file"
+                id={`question-file-upload-${question.id}`}
+                className="hidden"
+                accept="image/*"
+                onChange={(e) => handleUploadImage(e, section.id, question.id)}
+              />
+            </div>
+
+            {/* Show Uploaded Image */}
+            {question.image && (
+              <div className="mt-2 flex justify-center">
+                <img
+                  src={question.image}
+                  alt={`คำถาม`}
+                  className="w-4/5 max-h-80 object-contain border border-gray-300 rounded"
+                />
+              </div>
+            )}
           </div>
 
           {/* If text_input, show a simple text area */}
@@ -230,43 +260,43 @@ const Section = ({
                         }`}
                       />
                     </button>
+                    <div className="relative flex items-center w-full">
+                      {/* Option Input */}
+                      <input
+                        type="text"
+                        value={option.text || ""}
+                        onChange={(e) =>
+                          updateOption(
+                            section.id,
+                            question.id,
+                            idx,
+                            e.target.value
+                          )
+                        }
+                        placeholder={`ตัวเลือก ${idx + 1}`}
+                        className="w-full px-4 py-2 border border-gray-300 rounded text-black pr-10" // ใช้ `pr-10` เพื่อเว้นที่สำหรับไอคอน
+                      />
+                      {/* Upload Image Button */}
+                      <button
+                        className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500"
+                        onClick={() =>
+                          document.getElementById(`file-upload-${idx}`).click()
+                        }
+                      >
+                        <FontAwesomeIcon icon={faImage} className="w-6 h-6" />
+                      </button>
 
-                    {/* Option Input */}
-                    <input
-                      type="text"
-                      value={option.text || ""}
-                      onChange={(e) =>
-                        updateOption(
-                          section.id,
-                          question.id,
-                          idx,
-                          e.target.value
-                        )
-                      }
-                      placeholder={`ตัวเลือก ${idx + 1}`}
-                      className="w-full px-4 py-2 border border-gray-300 rounded text-black"
-                    />
-
-                    {/* Upload Image Button */}
-                    <button
-                      className="ml-2 text-gray-500"
-                      onClick={() =>
-                        document.getElementById(`file-upload-${idx}`).click()
-                      }
-                    >
-                      <FontAwesomeIcon icon={faImage} className="w-6 h-6" />
-                    </button>
-
-                    {/* Hidden File Input */}
-                    <input
-                      type="file"
-                      id={`file-upload-${idx}`}
-                      className="hidden"
-                      accept="image/*"
-                      onChange={(e) =>
-                        handleUploadImage(e, section.id, question.id, idx)
-                      }
-                    />
+                      {/* Hidden File Input */}
+                      <input
+                        type="file"
+                        id={`file-upload-${idx}`}
+                        className="hidden"
+                        accept="image/*"
+                        onChange={(e) =>
+                          handleUploadImage(e, section.id, question.id, idx)
+                        }
+                      />
+                    </div>
 
                     {/* Delete Option Button */}
                     <button

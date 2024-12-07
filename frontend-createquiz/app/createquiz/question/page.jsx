@@ -392,7 +392,7 @@ export default function CreateQuiz() {
       });
   };
 
-  const handleUploadImage = (e, sectionId, questionId, optionIdx) => {
+  const handleUploadImage = (e, sectionId, questionId, optionIdx = null) => {
     const file = e.target.files[0];
     if (file) {
       const reader = new FileReader();
@@ -406,11 +406,19 @@ export default function CreateQuiz() {
                     question.id === questionId
                       ? {
                           ...question,
-                          options: question.options.map((option, idx) =>
-                            idx === optionIdx
-                              ? { ...option, image: reader.result }
-                              : option
-                          ),
+                          ...(optionIdx !== null
+                            ? {
+                                // Update image for a specific option
+                                options: question.options.map((option, idx) =>
+                                  idx === optionIdx
+                                    ? { ...option, image: reader.result }
+                                    : option
+                                ),
+                              }
+                            : {
+                                // Update image for the question itself
+                                image: reader.result,
+                              }),
                         }
                       : question
                   ),
@@ -422,6 +430,7 @@ export default function CreateQuiz() {
       reader.readAsDataURL(file);
     }
   };
+  
   
   return (
     <div className="min-h-screen bg-gray-100 py-8">
