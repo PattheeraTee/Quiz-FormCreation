@@ -1,17 +1,56 @@
 // components/LoginForm.js
 "use client";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Swal from "sweetalert2";
+import axios from "axios";
 
 export default function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const router = useRouter();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Handle login logic here
-    console.log("Email:", email);
-    console.log("Password:", password);
+
+    try {
+      const response = await axios.post("http://localhost:3001/login", {
+        email,
+        password,
+      }, {
+        withCredentials: true, // สำคัญมาก: เพื่อให้คุกกี้ถูกส่งและรับกลับมา
+      });
+
+      if (response.status === 200) {
+        // Assuming successful login
+        Swal.fire({
+          icon: "success",
+          title: "เข้าสู่ระบบสำเร็จ",
+          text: "ยินดีต้อนรับ!",
+          showConfirmButton: true,
+        });
+        router.push("/home");
+      }
+    } catch (error) {
+      if (error.response && error.response.status === 401) {
+        // Handle login failure
+        Swal.fire({
+          icon: "error",
+          title: "เข้าสู่ระบบล้มเหลว",
+          text: "อีเมลหรือรหัสผ่านไม่ถูกต้อง",
+          showConfirmButton: true,
+        });
+      } else {
+        // Handle server or network error
+        Swal.fire({
+          icon: "error",
+          title: "เกิดข้อผิดพลาด",
+          text: "ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์",
+          showConfirmButton: true,
+        });
+      }
+    }
   };
 
   return (

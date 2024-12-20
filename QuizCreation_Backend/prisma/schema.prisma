@@ -1,8 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
   provider = "prisma-client-js"
@@ -13,56 +8,152 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Quiz {
-  id          String     @id @default(auto()) @map("_id") @db.ObjectId
-  quizId      String     @unique @default(uuid())
-  userId      String     
-  type        String
-  coverPage   CoverPage?  // One-to-one กับ CoverPage
-  sections    Section[]   @relation("QuizSections") // One-to-many กับ Section
-}
+// model Quiz {
+//   id          String     @id @default(auto()) @map("_id") @db.ObjectId
+//   quizId      String     @unique @default(uuid())
+//   userId      String     
+//   type        String
+//   coverPage   CoverPage?  // One-to-one กับ CoverPage
+//   sections    Section[]   @relation("QuizSections") // One-to-many กับ Section
+// }
 
-model CoverPage {
+// model CoverPage {
+//   id          String   @id @default(auto()) @map("_id") @db.ObjectId
+//   quizId      String   @db.ObjectId @unique // One-to-one ต้องมี @unique
+//   quizTitle   String   // ชื่อ quiz
+//   description String?
+//   buttonText  String   @default("Start")
+//   imagePath   String?  // รูปภาพของ cover page (nullable)
+//   quiz        Quiz     @relation(fields: [quizId], references: [id]) // One-to-one กับ Quiz
+// }
+
+// model Section {
+//   id                 String     @id @default(auto()) @map("_id") @db.ObjectId
+//   sectionId          String     @unique // เพิ่ม sectionId และทำให้เป็น unique
+//   sectionNumber      Int        // หมายเลข section
+//   sectionTitle       String?     // ชื่อ section
+//   sectionDescription String?     // คำอธิบาย section
+//   quizId             String     @db.ObjectId
+//   quiz               Quiz       @relation("QuizSections", fields: [quizId], references: [id]) // One-to-many กับ Quiz
+//   questions          Question[] @relation("SectionQuestions") // One-to-many กับ Question
+// }
+
+// model Question {
+//   id          String    @id @default(auto()) @map("_id") @db.ObjectId
+//   questionId  String
+//   type        String
+//   text        String
+//   imagePath   String?   // รูปภาพของคำถาม (nullable)
+//   required    Boolean   @default(false) // ระบุว่าต้องตอบคำถามหรือไม่
+//   options     Option[]  @relation("QuestionOptions") // One-to-many กับ Option
+//   points      Int?
+//   section     Section   @relation("SectionQuestions", fields: [sectionId], references: [id]) // Many-to-one กับ Section
+//   sectionId   String    @db.ObjectId
+// }
+
+// model Option {
+//   id         String   @id @default(auto()) @map("_id") @db.ObjectId
+//   optionId   String
+//   text       String
+//   imagePath  String?  // รูปภาพของตัวเลือกคำตอบ (nullable)
+//   isCorrect  Boolean?
+//   weight     Int?
+//   question   Question @relation("QuestionOptions", fields: [questionId], references: [id]) // Many-to-one กับ Question
+//   questionId String   @db.ObjectId
+// }
+
+model User{
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  quizId      String   @db.ObjectId @unique // One-to-one ต้องมี @unique
-  quizTitle   String   // ชื่อ quiz
-  description String?
-  buttonText  String   @default("Start")
-  imagePath   String?  // รูปภาพของ cover page (nullable)
-  quiz        Quiz     @relation(fields: [quizId], references: [id]) // One-to-one กับ Quiz
+  user_id     String   @unique
+  email       String   @unique
+  password    String
+  profile_image String?
+  // forms        Form[]
 }
 
-model Section {
-  id                 String     @id @default(auto()) @map("_id") @db.ObjectId
-  sectionId          String     @unique // เพิ่ม sectionId และทำให้เป็น unique
-  sectionNumber      Int        // หมายเลข section
-  sectionTitle       String?     // ชื่อ section
-  sectionDescription String?     // คำอธิบาย section
-  quizId             String     @db.ObjectId
-  quiz               Quiz       @relation("QuizSections", fields: [quizId], references: [id]) // One-to-many กับ Quiz
-  questions          Question[] @relation("SectionQuestions") // One-to-many กับ Question
-}
+// model Form{
+//   id          String   @id @default(auto()) @map("_id") @db.ObjectId
+//   form_id     String   @unique
+//   form_type   String
+//   is_form_open Boolean
+//   start_date  DateTime?
+//   end_date    DateTime?
+//   cover_page_id  String
+//   sections   Section[]
+//   results     Result[]
+//   user_id     String
+//   theme_id    String
+//   user        User     @relation(fields: [user_id], references: [user_id])
+//   theme       Theme    @relation(fields: [theme_id], references: [theme_id])
+// }
 
-model Question {
-  id          String    @id @default(auto()) @map("_id") @db.ObjectId
-  questionId  String
-  type        String
-  text        String
-  imagePath   String?   // รูปภาพของคำถาม (nullable)
-  required    Boolean   @default(false) // ระบุว่าต้องตอบคำถามหรือไม่
-  options     Option[]  @relation("QuestionOptions") // One-to-many กับ Option
-  points      Int?
-  section     Section   @relation("SectionQuestions", fields: [sectionId], references: [id]) // Many-to-one กับ Section
-  sectionId   String    @db.ObjectId
-}
+// model CoverPage{
+//   id          String   @id @default(auto()) @map("_id") @db.ObjectId
+//   cover_page_id String @unique
+//   title       String
+//   description String
+//   text_button String?
+//   cover_page_image  String?
+//   form        Form    
+// }
 
-model Option {
-  id         String   @id @default(auto()) @map("_id") @db.ObjectId
-  optionId   String
-  text       String
-  imagePath  String?  // รูปภาพของตัวเลือกคำตอบ (nullable)
-  isCorrect  Boolean?
-  weight     Int?
-  question   Question @relation("QuestionOptions", fields: [questionId], references: [id]) // Many-to-one กับ Question
-  questionId String   @db.ObjectId
-}
+// model Theme{
+//   id          String   @id @default(auto()) @map("_id") @db.ObjectId
+//   theme_id    String   @unique
+//   primary_color  String
+//   forms       Form[]
+// }
+
+// model Section{
+//   id          String   @id @default(auto()) @map("_id") @db.ObjectId
+//   section_id  String   @unique
+//   number      Int
+//   title       String?
+//   description String?
+//   form_id     String
+//   form        Form     @relation(fields: [form_id], references: [form_id])
+//   questions   Question[]
+// }
+
+// model Question{
+//   id          String   @id @default(auto()) @map("_id") @db.ObjectId
+//   question_id String   @unique
+//   type        String
+//   question    String
+//   question_image  String?
+//   points      Int?
+//   required    Boolean
+//   limit       Int?
+//   correct_answer  String[]
+//   section_id  String
+//   section     Section  @relation(fields: [section_id], references: [section_id])
+//   options     Option[]
+// }
+// model Option{
+//   id          String   @id @default(auto()) @map("_id") @db.ObjectId
+//   option_id   String   @unique
+//   text        String
+//   is_correct  Boolean?
+//   option_image  String?
+//   weight      Int?
+//   question_id String
+//   question    Question @relation(fields: [question_id], references: [question_id])
+//   result_id   String
+//   result      Result   @relation(fields: [result_id], references: [result_id])
+// }
+
+// model Result{
+//   id          String   @id @default(auto()) @map("_id") @db.ObjectId
+//   result_id   String   @unique
+//   title      String
+//   description String?
+//   result_image  String?
+//   form_id     String
+//   form        Form     @relation(fields: [form_id], references: [form_id])
+//   options     Option[]
+// }
+
+
+
+
+
